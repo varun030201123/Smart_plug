@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#14181C" />
+<title>Plug</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#14181C;
+    --surface:#1B2027;
+    --surface-2:#20262E;
+    --accent:#F0A83C;
+    --accent-soft:rgba(240,168,60,0.14);
+    --live:#4FD1C5;
+    --text:#EDEFF2;
+    --muted:#8B95A1;
+    --danger:#E2726B;
+    --ring:rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:radial-gradient(120% 90% at 50% -10%, #1b2029 0%, #14181C 55%);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+  }
+  .num{font-family:'Space Grotesk',sans-serif; font-variant-numeric: tabular-nums;}
+
+  /* ---------- Login ---------- */
+  #login-screen{
+    width:100%;
+    max-width:360px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  #login-screen .mark{
+    display:flex; align-items:center; gap:10px;
+  }
+  #login-screen .mark svg{ display:block; }
+  #login-screen h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px; font-weight:600; margin:0; letter-spacing:0.2px;
+  }
+  #login-screen p.sub{ color:var(--muted); margin:0; font-size:14px; line-height:1.5; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:13px; color:var(--muted); }
+  .field input{
+    background:var(--surface);
+    border:1px solid var(--ring);
+    color:var(--text);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:15px;
+    font-family:inherit;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .field input:focus{ border-color:var(--accent); }
+  button.primary{
+    background:var(--accent);
+    color:#1a1206;
+    border:none;
+    border-radius:10px;
+    padding:13px 16px;
+    font-size:15px;
+    font-weight:600;
+    font-family:inherit;
+    cursor:pointer;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  button.primary:hover{ filter:brightness(1.06); }
+  button.primary:active{ transform:scale(0.98); }
+  button.primary:disabled{ opacity:0.5; cursor:default; }
+  #login-error{ color:var(--danger); font-size:13px; min-height:16px; }
+
+  /* ---------- Dashboard ---------- */
+  #app{ width:100%; max-width:420px; display:none; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:34px;
+  }
+  .topbar .title{ display:flex; align-items:center; gap:9px; }
+  .topbar .title span{ font-size:15px; font-weight:500; color:var(--muted); }
+  .status-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--muted);
+    position:relative;
+  }
+  .status-dot.live{ background:var(--live); }
+  .status-dot.live::after{
+    content:'';
+    position:absolute; inset:-4px;
+    border-radius:50%;
+    background:var(--live);
+    opacity:0.35;
+    animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(0.6); opacity:0.35; }
+    100%{ transform:scale(2.4); opacity:0; }
+  }
+  .status-label{ font-size:13px; color:var(--muted); }
+  .logout{
+    background:none; border:none; color:var(--muted);
+    font-family:inherit; font-size:13px; cursor:pointer;
+    padding:6px 4px;
+  }
+  .logout:hover{ color:var(--text); }
+
+  .hero{ display:flex; flex-direction:column; align-items:center; gap:20px; margin-bottom:8px;}
+
+  .toggle-wrap{ position:relative; width:172px; height:172px; }
+  .toggle-ripple{
+    position:absolute; inset:0; border-radius:50%;
+    pointer-events:none;
+  }
+  .toggle-ripple.active{
+    animation:ripple 0.6s ease-out;
+  }
+  @keyframes ripple{
+    0%{ box-shadow:0 0 0 0 var(--accent-soft); }
+    100%{ box-shadow:0 0 0 26px rgba(240,168,60,0); }
+  }
+  #power-toggle{
+    width:172px; height:172px; border-radius:50%;
+    background:var(--surface);
+    border:1px solid var(--ring);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background .35s ease, box-shadow .35s ease, border-color .35s ease;
+    position:relative;
+  }
+  #power-toggle.on{
+    background:radial-gradient(circle at 50% 35%, #2a2213, var(--surface) 70%);
+    border-color:rgba(240,168,60,0.5);
+    box-shadow:0 0 46px 6px rgba(240,168,60,0.25), inset 0 0 30px rgba(240,168,60,0.12);
+  }
+  #power-toggle svg{ width:52px; height:52px; transition:stroke .35s ease, filter .35s ease; stroke:#5a6270; }
+  #power-toggle.on svg{ stroke:var(--accent); filter:drop-shadow(0 0 6px rgba(240,168,60,0.6)); }
+  #power-toggle:active{ transform:scale(0.98); }
+  #power-toggle.disabled{ pointer-events:none; opacity:0.6; }
+
+  .reading{ text-align:center; }
+  .reading .watts{ font-size:44px; font-weight:600; line-height:1; }
+  .reading .watts .unit{ font-size:20px; color:var(--muted); font-weight:500; margin-left:4px; }
+  .reading .sub{ margin-top:6px; font-size:14px; color:var(--muted); }
+
+  .trace-wrap{
+    margin:30px -4px 26px;
+    background:var(--surface);
+    border:1px solid var(--ring);
+    border-radius:16px;
+    padding:16px 4px 10px;
+  }
+  .trace-label{
+    font-size:12px; color:var(--muted); padding:0 16px 8px;
+    display:flex; justify-content:space-between;
+  }
+  canvas#trace{ width:100%; height:64px; display:block; }
+
+  .stats{
+    display:flex; justify-content:space-between;
+    padding:2px 4px;
+  }
+  .stat{ text-align:left; }
+  .stat .label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .stat .value{ font-size:18px; font-weight:500; }
+  .stat.right{ text-align:right; }
+
+  .offline-note{
+    margin-top:26px;
+    font-size:13px;
+    color:var(--muted);
+    text-align:center;
+    line-height:1.5;
+  }
+
+  .icon-btn{
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    padding:6px; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; transition:color .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{ color:var(--text); background:var(--surface); }
+  .icon-btn svg{ width:19px; height:19px; }
+
+  .topbar-actions{ display:flex; align-items:center; gap:4px; }
+
+  /* ---------- Settings sheet ---------- */
+  #settings-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(10,12,14,0.6);
+    z-index:10;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  #settings-overlay.open{ display:flex; }
+  #settings-sheet{
+    width:100%; max-width:460px;
+    max-height:86vh;
+    overflow-y:auto;
+    background:var(--surface);
+    border:1px solid var(--ring);
+    border-bottom:none;
+    border-radius:22px 22px 0 0;
+    padding:22px 20px calc(24px + env(safe-area-inset-bottom));
+    animation:sheet-up .25s ease-out;
+  }
+  @keyframes sheet-up{
+    from{ transform:translateY(16px); opacity:0; }
+    to{ transform:translateY(0); opacity:1; }
+  }
+  .sheet-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .sheet-header h2{ font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:600; margin:0; }
+  .settings-section{
+    padding:18px 0;
+    border-top:1px solid var(--ring);
+  }
+  .settings-section:first-of-type{ border-top:none; padding-top:0; }
+  .settings-section .row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .settings-section .row + .row{ margin-top:12px; }
+  .settings-section .s-title{ font-size:14px; font-weight:500; }
+  .settings-section .s-desc{ font-size:12.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+
+  select, .num-input{
+    background:var(--surface-2);
+    border:1px solid var(--ring);
+    color:var(--text);
+    border-radius:9px;
+    padding:9px 11px;
+    font-size:14px;
+    font-family:inherit;
+    outline:none;
+  }
+  select:focus, .num-input:focus{ border-color:var(--accent); }
+  .num-input{ width:84px; text-align:right; }
+
+  .switch{
+    position:relative; width:44px; height:26px; flex-shrink:0;
+  }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .slider{
+    position:absolute; inset:0; background:var(--surface-2);
+    border:1px solid var(--ring);
+    border-radius:14px; cursor:pointer; transition:background .2s ease;
+  }
+  .switch .slider::before{
+    content:''; position:absolute; width:18px; height:18px;
+    left:3px; top:2px; background:#c7cdd4; border-radius:50%;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .switch input:checked + .slider{ background:rgba(240,168,60,0.35); border-color:rgba(240,168,60,0.5); }
+  .switch input:checked + .slider::before{ transform:translateX(18px); background:var(--accent); }
+
+  .save-row{ margin-top:16px; }
+  .save-row button.primary{ width:100%; }
+  .save-status{ font-size:12.5px; color:var(--live); text-align:center; margin-top:8px; min-height:16px; }
+
+  .day-chips{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .day-chip{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--surface-2); border:1px solid var(--ring);
+    color:var(--muted); font-size:12px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none; transition:all .15s ease;
+  }
+  .day-chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+
+  .schedule-slot{
+    background:var(--surface-2); border:1px solid var(--ring); border-radius:12px;
+    padding:14px; margin-top:12px;
+  }
+  .schedule-slot .row{ margin-bottom:0; }
+  .schedule-slot input[type="time"]{
+    background:var(--bg); border:1px solid var(--ring); color:var(--text);
+    border-radius:8px; padding:7px 9px; font-family:inherit; font-size:14px;
+  }
+  .cost-line{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .status-dot.live::after, .toggle-ripple.active, #settings-sheet{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-screen">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="13" cy="13" r="12" stroke="#F0A83C" stroke-width="2"/>
+        <path d="M13 6V12" stroke="#F0A83C" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1>Plug</h1>
+    </div>
+    <p class="sub">Enter your password to control your smart plug from anywhere.</p>
+    <form id="login-form" style="display:flex; flex-direction:column; gap:14px;">
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+      </div>
+      <div id="login-error"></div>
+      <button type="submit" class="primary" id="login-btn">Unlock</button>
+    </form>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div id="app">
+    <div class="topbar">
+      <div class="title">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-label" id="status-label">Connecting…</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="settings-btn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="logout" id="logout-btn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="toggle-wrap">
+        <div class="toggle-ripple" id="ripple"></div>
+        <div id="power-toggle" role="button" aria-label="Toggle power">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2V11" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6.5 6.5C4.6 8.1 3.5 10.4 3.5 13C3.5 17.7 7.3 21.5 12 21.5C16.7 21.5 20.5 17.7 20.5 13C20.5 10.4 19.4 8.1 17.5 6.5" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="reading">
+        <div class="watts"><span id="watts">–</span><span class="unit">W</span></div>
+        <div class="sub" id="sub-reading">– A · – V</div>
+      </div>
+    </div>
+
+    <div class="trace-wrap">
+      <div class="trace-label"><span>Power draw</span><span id="trace-range">last few minutes</span></div>
+      <canvas id="trace"></canvas>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Today</div>
+        <div class="value num" id="kwh-today">– kWh</div>
+        <div class="cost-line" id="cost-today"></div>
+      </div>
+      <div class="stat right">
+        <div class="label">Total</div>
+        <div class="value num" id="kwh-total">– kWh</div>
+        <div class="cost-line" id="cost-total"></div>
+      </div>
+    </div>
+
+    <div class="offline-note" id="offline-note" style="display:none;">
+      Plug hasn't checked in recently. It may be powered off or offline — controls will apply as soon as it reconnects.
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS SHEET ============ -->
+  <div id="settings-overlay">
+    <div id="settings-sheet">
+      <div class="sheet-header">
+        <h2>Settings</h2>
+        <button class="icon-btn" id="settings-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">When power comes back after an outage</div>
+            <div class="s-desc">What the plug should do once electricity returns.</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;">
+          <select id="poweronstate-select" style="width:100%;">
+            <option value="0">Stay off</option>
+            <option value="1">Turn on</option>
+            <option value="3">Remember last state</option>
+            <option value="2">Flip opposite of last state</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Overload protection</div>
+            <div class="s-desc">Auto shut-off if power draw goes above this. Set 0 to disable.</div>
+          </div>
+          <input type="number" class="num-input" id="maxpower-input" min="0" step="10" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Auto-off timer</div>
+            <div class="s-desc">Turns itself off this many minutes after every time it's switched on. 0 disables it.</div>
+          </div>
+          <input type="number" class="num-input" id="autooff-input" min="0" step="1" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Lock physical button</div>
+            <div class="s-desc">Stops the button on the plug itself from toggling power — app-only control.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="childlock-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Alexa / Google Home</div>
+            <div class="s-desc">Local voice control on your home WiFi — no cloud account needed. Only works while on the same network as your speaker.</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="voice-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Electricity rate</div>
+            <div class="s-desc">Used to estimate cost from your usage. ₹ per kWh.</div>
+          </div>
+          <input type="number" class="num-input" id="tariff-input" min="0" step="0.5" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="s-title" style="margin-bottom:2px;">Schedules</div>
+        <div class="s-desc">Up to 4 automatic on/off times. Runs on the plug itself, works even if this app is closed.</div>
+        <div id="schedule-slots"></div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Usage history</div>
+            <div class="s-desc">Clears the kWh counters below so you can start fresh — can't be undone.</div>
+          </div>
+          <button class="icon-btn" id="reset-energy-btn" style="border:1px solid var(--ring); border-radius:9px; padding:9px 14px; color:var(--danger); font-size:13px;">Reset</button>
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="primary" id="settings-save">Save settings</button>
+        <div class="save-status" id="settings-save-status"></div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+  // ---------------- CONFIG ----------------
+  const APP_PASSWORD = 'Varun030201@';
+
+  const MQTT_URL = 'wss://bcf21211.ala.asia-southeast1.emqxsl.com:8084/mqtt';
+  const MQTT_USER = 'smartplug_device';
+  const MQTT_PASS = 'Varun030201@';
+  const TOPIC = 'qubo_plug_1';
+  // -----------------------------------------
+
+  const loginScreen = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+  const loginForm = document.getElementById('login-form');
+  const loginBtn = document.getElementById('login-btn');
+  const loginError = document.getElementById('login-error');
+
+  let mqttClient = null;
+  let lastSeen = 0;
+  let desiredOn = false;
+  let awaitingConfirm = false;
+  const history = []; // {t, w}
+  const HISTORY_MS = 5 * 60 * 1000;
+
+  function showApp(){
+    loginScreen.style.display = 'none';
+    app.style.display = 'block';
+    connectMqtt();
+    requestAnimationFrame(resizeCanvas);
+  }
+
+  function showLogin(){
+    app.style.display = 'none';
+    loginScreen.style.display = 'flex';
+    if (mqttClient) { mqttClient.end(true); mqttClient = null; }
+  }
+
+  // ---- Auth (simple local password check) ----
+  if (localStorage.getItem('plug_unlocked') === 'yes') showApp();
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+    const password = document.getElementById('password').value;
+    if (password !== APP_PASSWORD) {
+      loginError.textContent = 'Wrong password.';
+      return;
+    }
+    localStorage.setItem('plug_unlocked', 'yes');
+    showApp();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem('plug_unlocked');
+    showLogin();
+  });
+
+  // ---- MQTT ----
+  function connectMqtt(){
+    setStatus('connecting');
+    mqttClient = mqtt.connect(MQTT_URL, {
+      username: MQTT_USER,
+      password: MQTT_PASS,
+      clientId: 'webapp_' + Math.random().toString(16).slice(2),
+      reconnectPeriod: 3000,
+      connectTimeout: 8000,
+    });
+
+    mqttClient.on('connect', () => {
+      mqttClient.subscribe(`tele/${TOPIC}/STATE`);
+      mqttClient.subscribe(`tele/${TOPIC}/SENSOR`);
+      mqttClient.subscribe(`stat/${TOPIC}/POWER`);
+      mqttClient.subscribe(`stat/${TOPIC}/RESULT`);
+      mqttClient.subscribe(`stat/${TOPIC}/STATUS8`);
+      mqttClient.subscribe(`stat/${TOPIC}/STATUS11`);
+      mqttClient.subscribe(`tele/${TOPIC}/LWT`);
+      // ask the plug to report right now instead of waiting for next teleperiod
+      mqttClient.publish(`cmnd/${TOPIC}/Status`, '8');
+      mqttClient.publish(`cmnd/${TOPIC}/Status`, '11');
+    });
+
+    mqttClient.on('reconnect', () => setStatus('connecting'));
+    mqttClient.on('close', () => setStatus('offline'));
+    mqttClient.on('error', () => setStatus('offline'));
+
+    mqttClient.on('message', (topic, payload) => {
+      const text = payload.toString();
+
+      // Last Will and Testament: instant, reliable online/offline signal
+      if (topic.endsWith('/LWT')) {
+        if (text.trim() === 'Online') { lastSeen = Date.now(); setStatus('live'); }
+        else setStatus('offline');
+        return;
+      }
+
+      lastSeen = Date.now();
+
+      if (topic.endsWith('/STATE') || topic.endsWith('/RESULT')) {
+        try {
+          const j = JSON.parse(text);
+          if (j.POWER !== undefined) applyPowerState(j.POWER === 'ON');
+          if (j.PowerOnState !== undefined) setSelectFromResult('poweronstate-select', j.PowerOnState);
+          if (j.MaxPower !== undefined) document.getElementById('maxpower-input').value = j.MaxPower;
+          if (j.PulseTime1 !== undefined) applyPulseTimeToUI(j.PulseTime1);
+          if (j.SetOption73 !== undefined) document.getElementById('childlock-toggle').checked = (String(j.SetOption73) === 'ON' || j.SetOption73 === 1 || j.SetOption73 === '1');
+          if (j.Emulation !== undefined) document.getElementById('voice-toggle').checked = (Number(j.Emulation) > 0);
+          for (let i = 1; i <= NUM_SLOTS; i++) {
+            if (j[`Timer${i}`] !== undefined) applyTimerToUI(i, j[`Timer${i}`]);
+          }
+        } catch(_) {}
+      }
+      if (topic.endsWith('/POWER')) {
+        applyPowerState(text.trim() === 'ON');
+      }
+      if (topic.endsWith('/SENSOR')) {
+        try {
+          const j = JSON.parse(text);
+          const e = j.ENERGY;
+          if (e) {
+            updateReadings(e.Power ?? 0, e.Current ?? 0, e.Voltage ?? 0, e.Today ?? 0, e.Total ?? 0);
+          }
+        } catch(_) {}
+      }
+      if (topic.endsWith('/STATUS8')) {
+        try {
+          const e = JSON.parse(text).StatusSNS?.ENERGY;
+          if (e) updateReadings(e.Power ?? 0, e.Current ?? 0, e.Voltage ?? 0, e.Today ?? 0, e.Total ?? 0);
+        } catch(_) {}
+      }
+      if (topic.endsWith('/STATUS11')) {
+        try {
+          const p = JSON.parse(text).StatusSTS?.POWER;
+          if (p !== undefined) applyPowerState(p === 'ON');
+        } catch(_) {}
+      }
+      setStatus('live');
+    });
+  }
+
+  function setSelectFromResult(id, value){
+    const el = document.getElementById(id);
+    // Tasmota may return either the numeric code or a text label depending on command
+    const asNum = String(value).match(/\d+/);
+    if (asNum) el.value = asNum[0];
+  }
+
+  function applyPulseTimeToUI(value){
+    const v = parseInt(value, 10) || 0;
+    const minutes = v > 100 ? Math.round((v - 100) / 60) : 0;
+    document.getElementById('autooff-input').value = minutes;
+  }
+
+  function applyPowerState(isOn){
+    desiredOn = isOn;
+    awaitingConfirm = false;
+    const toggle = document.getElementById('power-toggle');
+    toggle.classList.remove('disabled');
+    toggle.classList.toggle('on', isOn);
+  }
+
+  function updateReadings(w, a, v, today, total){
+    document.getElementById('watts').textContent = Math.round(w);
+    document.getElementById('sub-reading').textContent = `${a.toFixed(2)} A · ${Math.round(v)} V`;
+    document.getElementById('kwh-today').textContent = `${today.toFixed(2)} kWh`;
+    document.getElementById('kwh-total').textContent = `${total.toFixed(2)} kWh`;
+    updateCostDisplay();
+
+    const now = Date.now();
+    history.push({ t: now, w });
+    while (history.length && now - history[0].t > HISTORY_MS) history.shift();
+    drawTrace();
+  }
+
+  function setStatus(state){
+    const dot = document.getElementById('status-dot');
+    const label = document.getElementById('status-label');
+    const offlineNote = document.getElementById('offline-note');
+    dot.classList.remove('live');
+    if (state === 'live') {
+      dot.classList.add('live');
+      label.textContent = 'Live';
+      offlineNote.style.display = 'none';
+    } else if (state === 'connecting') {
+      label.textContent = 'Connecting…';
+      offlineNote.style.display = 'none';
+    } else {
+      label.textContent = 'Offline';
+      offlineNote.style.display = 'block';
+    }
+  }
+
+  // watchdog: if nothing heard for 45s, consider it offline even if socket is technically open
+  setInterval(() => {
+    if (lastSeen && Date.now() - lastSeen > 45000) setStatus('offline');
+  }, 5000);
+
+  // ---- Toggle interaction ----
+  document.getElementById('power-toggle').addEventListener('click', () => {
+    if (!mqttClient || awaitingConfirm) return;
+    const next = !desiredOn;
+    awaitingConfirm = true;
+    const toggle = document.getElementById('power-toggle');
+    toggle.classList.add('disabled');
+    toggle.classList.toggle('on', next); // optimistic
+    const ripple = document.getElementById('ripple');
+    ripple.classList.remove('active');
+    void ripple.offsetWidth;
+    ripple.classList.add('active');
+    mqttClient.publish(`cmnd/${TOPIC}/POWER`, next ? 'ON' : 'OFF');
+    // safety: re-enable if no confirmation arrives
+    setTimeout(() => { toggle.classList.remove('disabled'); awaitingConfirm = false; }, 6000);
+  });
+
+  // ---- Trace chart ----
+  const canvas = document.getElementById('trace');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawTrace();
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  function drawTrace(){
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    ctx.clearRect(0,0,w,h);
+    if (history.length < 2) return;
+
+    const maxW = Math.max(10, ...history.map(p => p.w));
+    const t0 = history[0].t, t1 = history[history.length-1].t;
+    const span = Math.max(1000, t1 - t0);
+
+    ctx.beginPath();
+    history.forEach((p, i) => {
+      const x = ((p.t - t0) / span) * w;
+      const y = h - (p.w / maxW) * (h - 8) - 4;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#F0A83C';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(240,168,60,0.5)';
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+
+    // fill under curve
+    ctx.lineTo(w, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.shadowBlur = 0;
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, 'rgba(240,168,60,0.18)');
+    grad.addColorStop(1, 'rgba(240,168,60,0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // ---- Settings panel: schedule slots ----
+  const DAY_LABELS = ['S','M','T','W','T','F','S'];
+  const scheduleContainer = document.getElementById('schedule-slots');
+  const NUM_SLOTS = 4;
+
+  for (let i = 1; i <= NUM_SLOTS; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'schedule-slot';
+    slot.dataset.slot = i;
+    slot.innerHTML = `
+      <div class="row">
+        <div class="s-title">Schedule ${i}</div>
+        <label class="switch">
+          <input type="checkbox" class="sched-enable" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <input type="time" class="sched-time" value="08:00" />
+        <select class="sched-action">
+          <option value="1">Turn on</option>
+          <option value="0">Turn off</option>
+        </select>
+      </div>
+      <div class="day-chips">
+        ${DAY_LABELS.map((d, idx) => `<div class="day-chip" data-day="${idx}">${d}</div>`).join('')}
+      </div>
+    `;
+    scheduleContainer.appendChild(slot);
+    slot.querySelectorAll('.day-chip').forEach(chip => {
+      chip.addEventListener('click', () => chip.classList.toggle('active'));
+    });
+  }
+
+  function getScheduleSlotEls(n){
+    const slot = scheduleContainer.querySelector(`[data-slot="${n}"]`);
+    return {
+      slot,
+      enable: slot.querySelector('.sched-enable'),
+      time: slot.querySelector('.sched-time'),
+      action: slot.querySelector('.sched-action'),
+      dayChips: slot.querySelectorAll('.day-chip'),
+    };
+  }
+
+  // ---- Settings panel: open / close / query current values ----
+  const settingsOverlay = document.getElementById('settings-overlay');
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    settingsOverlay.classList.add('open');
+    document.getElementById('tariff-input').value = localStorage.getItem('plug_tariff') || '8';
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(`cmnd/${TOPIC}/PowerOnState`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/MaxPower`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/SetOption73`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/Emulation`, '');
+      for (let i = 1; i <= NUM_SLOTS; i++) {
+        mqttClient.publish(`cmnd/${TOPIC}/Timer${i}`, '');
+      }
+    }
+  });
+  document.getElementById('settings-close').addEventListener('click', () => {
+    settingsOverlay.classList.remove('open');
+  });
+  settingsOverlay.addEventListener('click', (e) => {
+    if (e.target === settingsOverlay) settingsOverlay.classList.remove('open');
+  });
+
+  function applyTimerToUI(n, t){
+    const { enable, time, action, dayChips } = getScheduleSlotEls(n);
+    enable.checked = !!t.Enable;
+    if (t.Time) time.value = t.Time;
+    action.value = String(t.Action ?? 1);
+    const days = t.Days || '0000000';
+    dayChips.forEach((chip, idx) => {
+      chip.classList.toggle('active', days[idx] === '1');
+    });
+  }
+
+  // ---- Settings panel: save ----
+  document.getElementById('settings-save').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const statusEl = document.getElementById('settings-save-status');
+
+    mqttClient.publish(`cmnd/${TOPIC}/PowerOnState`, document.getElementById('poweronstate-select').value);
+    mqttClient.publish(`cmnd/${TOPIC}/MaxPower`, document.getElementById('maxpower-input').value || '0');
+
+    const offMinutes = parseInt(document.getElementById('autooff-input').value || '0', 10);
+    const pulseValue = offMinutes > 0 ? (offMinutes * 60 + 100) : 0;
+    mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, String(pulseValue));
+
+    mqttClient.publish(`cmnd/${TOPIC}/SetOption73`, document.getElementById('childlock-toggle').checked ? '1' : '0');
+    mqttClient.publish(`cmnd/${TOPIC}/Emulation`, document.getElementById('voice-toggle').checked ? '2' : '0');
+
+    const tariff = parseFloat(document.getElementById('tariff-input').value || '0');
+    localStorage.setItem('plug_tariff', String(tariff));
+    updateCostDisplay();
+
+    let anySchedule = false;
+    for (let i = 1; i <= NUM_SLOTS; i++) {
+      const { enable, time, action, dayChips } = getScheduleSlotEls(i);
+      const days = Array.from(dayChips).map(c => c.classList.contains('active') ? '1' : '0').join('');
+      if (enable.checked) anySchedule = true;
+      const timerObj = {
+        Enable: enable.checked ? 1 : 0,
+        Mode: 0,
+        Time: time.value || '08:00',
+        Window: 0,
+        Days: days,
+        Repeat: 1,
+        Output: 1,
+        Action: parseInt(action.value, 10),
+      };
+      mqttClient.publish(`cmnd/${TOPIC}/Timer${i}`, JSON.stringify(timerObj));
+    }
+    mqttClient.publish(`cmnd/${TOPIC}/Timers`, anySchedule ? '1' : '1');
+
+    statusEl.textContent = 'Saved.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  });
+
+  function updateCostDisplay(){
+    const tariff = parseFloat(localStorage.getItem('plug_tariff') || '8');
+    const todayText = document.getElementById('kwh-today').textContent;
+    const totalText = document.getElementById('kwh-total').textContent;
+    const todayKwh = parseFloat(todayText) || 0;
+    const totalKwh = parseFloat(totalText) || 0;
+    document.getElementById('cost-today').textContent = `≈ ₹${(todayKwh * tariff).toFixed(2)}`;
+    document.getElementById('cost-total').textContent = `≈ ₹${(totalKwh * tariff).toFixed(2)}`;
+  }
+
+  document.getElementById('reset-energy-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const sure = confirm('This clears the today/total kWh counters on the plug and cannot be undone. Continue?');
+    if (!sure) return;
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyReset1`, '0'); // total
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyReset2`, '0'); // yesterday
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyReset3`, '0'); // today
+    mqttClient.publish(`cmnd/${TOPIC}/Status`, '8'); // pull a fresh reading right away
+    const statusEl = document.getElementById('settings-save-status');
+    statusEl.textContent = 'Usage history cleared.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  });
+
+  // register service worker for installability
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+</script>
+</body>
+</html>
