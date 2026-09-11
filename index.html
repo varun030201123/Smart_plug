@@ -1,0 +1,1541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#14181C" />
+<title>Plug</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#14181C;
+    --surface:#1B2027;
+    --surface-2:#20262E;
+    --accent:#F0A83C;
+    --accent-soft:rgba(240,168,60,0.14);
+    --live:#4FD1C5;
+    --text:#EDEFF2;
+    --muted:#8B95A1;
+    --danger:#E2726B;
+    --ring:rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:radial-gradient(120% 90% at 50% -10%, #1b2029 0%, #14181C 55%);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+  }
+  .num{font-family:'Space Grotesk',sans-serif; font-variant-numeric: tabular-nums;}
+
+  /* ---------- Login ---------- */
+  #login-screen{ width:100%; max-width:360px; display:flex; flex-direction:column; gap:22px; }
+  #login-screen .mark{ display:flex; align-items:center; gap:10px; }
+  #login-screen h1{ font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:600; margin:0; letter-spacing:0.2px; }
+  #login-screen p.sub{ color:var(--muted); margin:0; font-size:14px; line-height:1.5; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field label{ font-size:13px; color:var(--muted); }
+  .field input{
+    background:var(--surface); border:1px solid var(--ring); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:15px; font-family:inherit;
+    outline:none; transition:border-color .15s ease;
+  }
+  .field input:focus{ border-color:var(--accent); }
+  button.primary{
+    background:var(--accent); color:#1a1206; border:none; border-radius:10px;
+    padding:13px 16px; font-size:15px; font-weight:600; font-family:inherit;
+    cursor:pointer; transition:filter .15s ease, transform .1s ease;
+  }
+  button.primary:hover{ filter:brightness(1.06); }
+  button.primary:active{ transform:scale(0.98); }
+  button.primary:disabled{ opacity:0.5; cursor:default; }
+  button.secondary{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--ring); border-radius:10px;
+    padding:13px 16px; font-size:14px; font-weight:500; font-family:inherit; cursor:pointer;
+  }
+  button.danger-outline{
+    background:none; color:var(--danger); border:1px solid rgba(226,114,107,0.4); border-radius:9px;
+    padding:9px 14px; font-size:13px; font-family:inherit; cursor:pointer;
+  }
+  #login-error{ color:var(--danger); font-size:13px; min-height:16px; }
+
+  /* ---------- Dashboard shell ---------- */
+  #app{ width:100%; max-width:420px; display:none; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .fw-banner{
+    background:var(--accent-soft); border:1px solid rgba(240,168,60,0.35); border-radius:12px;
+    padding:11px 14px; font-size:12.5px; color:var(--accent); margin-bottom:14px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .fw-banner a{ color:inherit; text-decoration:underline; }
+  .fw-banner button{ background:none; border:none; color:inherit; font-size:16px; cursor:pointer; padding:0 2px; line-height:1; opacity:0.7; }
+  .device-switch{
+    display:flex; align-items:center; gap:8px; background:none; border:none;
+    color:var(--text); font-family:inherit; cursor:pointer; padding:6px 4px 6px 0;
+  }
+  .device-switch .name{ font-size:15px; font-weight:600; }
+  .device-switch svg{ width:14px; height:14px; color:var(--muted); }
+  .status-row{ display:flex; align-items:center; gap:7px; margin:0 0 26px; }
+  .status-dot{ width:8px; height:8px; border-radius:50%; background:var(--muted); position:relative; }
+  .status-dot.live{ background:var(--live); }
+  .status-dot.live::after{
+    content:''; position:absolute; inset:-4px; border-radius:50%; background:var(--live);
+    opacity:0.35; animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{ 0%{transform:scale(0.6);opacity:0.35;} 100%{transform:scale(2.4);opacity:0;} }
+  .status-label{ font-size:13px; color:var(--muted); }
+  .topbar-actions{ display:flex; align-items:center; gap:4px; }
+  .logout{ background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px; cursor:pointer; padding:6px 4px; }
+  .logout:hover{ color:var(--text); }
+  .icon-btn{
+    background:none; border:none; color:var(--muted); cursor:pointer; padding:6px;
+    display:flex; align-items:center; justify-content:center; border-radius:8px;
+    transition:color .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{ color:var(--text); background:var(--surface); }
+  .icon-btn svg{ width:19px; height:19px; }
+  .timers-pill{
+    display:flex; align-items:center; gap:6px; width:auto;
+    border:1px solid rgba(240,168,60,0.4); border-radius:20px;
+    padding:8px 14px 8px 12px; color:var(--accent); font-size:13px; font-weight:600;
+  }
+  .timers-pill svg{ width:17px; height:17px; }
+  .timers-pill:hover{ background:var(--accent-soft); color:var(--accent); }
+
+  .hero{ display:flex; flex-direction:column; align-items:center; gap:16px; margin-bottom:6px;}
+  .toggle-wrap{ position:relative; width:172px; height:172px; }
+  .toggle-ripple{ position:absolute; inset:0; border-radius:50%; pointer-events:none; }
+  .toggle-ripple.active{ animation:ripple 0.6s ease-out; }
+  @keyframes ripple{ 0%{box-shadow:0 0 0 0 var(--accent-soft);} 100%{box-shadow:0 0 0 26px rgba(240,168,60,0);} }
+  #power-toggle{
+    width:172px; height:172px; border-radius:50%; background:var(--surface);
+    border:1px solid var(--ring); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:background .35s ease, box-shadow .35s ease, border-color .35s ease;
+    position:relative;
+  }
+  #power-toggle.on{
+    background:radial-gradient(circle at 50% 35%, #2a2213, var(--surface) 70%);
+    border-color:rgba(240,168,60,0.5);
+    box-shadow:0 0 46px 6px rgba(240,168,60,0.25), inset 0 0 30px rgba(240,168,60,0.12);
+  }
+  #power-toggle svg{ width:52px; height:52px; transition:stroke .35s ease, filter .35s ease; stroke:#5a6270; }
+  #power-toggle.on svg{ stroke:var(--accent); filter:drop-shadow(0 0 6px rgba(240,168,60,0.6)); }
+  #power-toggle:active{ transform:scale(0.98); }
+  #power-toggle.disabled{ pointer-events:none; opacity:0.6; }
+
+  .reading{ text-align:center; }
+  .reading .watts{ font-size:44px; font-weight:600; line-height:1; }
+  .reading .watts .unit{ font-size:20px; color:var(--muted); font-weight:500; margin-left:4px; }
+  .reading .sub{ margin-top:6px; font-size:14px; color:var(--muted); }
+
+  .timer-status{ display:flex; flex-direction:column; align-items:center; gap:4px; min-height:1px; }
+  .timer-status .line{
+    font-size:12.5px; color:var(--accent); background:var(--accent-soft);
+    padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px;
+  }
+  .timer-status .line.muted{ color:var(--muted); background:var(--surface); }
+  .timer-status .line button{
+    background:none; border:none; color:inherit; text-decoration:underline; font-family:inherit;
+    font-size:inherit; cursor:pointer; padding:0; opacity:0.85;
+  }
+
+  .quick-row{ display:flex; justify-content:center; gap:10px; margin-top:18px; }
+  .quick-btn{
+    background:var(--surface); border:1px solid var(--ring); color:var(--muted);
+    border-radius:12px; padding:10px 8px; font-family:inherit; font-size:12px;
+    display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer;
+    width:66px; transition:border-color .15s ease, color .15s ease;
+  }
+  .quick-btn:hover{ border-color:var(--accent); color:var(--text); }
+  .quick-btn svg{ width:18px; height:18px; }
+
+  .trace-wrap{
+    margin:26px -4px 26px; background:var(--surface); border:1px solid var(--ring);
+    border-radius:16px; padding:16px 4px 10px; cursor:pointer;
+  }
+  #history-bars{ width:100%; height:160px; display:block; }
+  .history-summary{ display:flex; justify-content:space-between; margin-top:14px; font-size:12.5px; color:var(--muted); }
+  .trace-label{ font-size:12px; color:var(--muted); padding:0 16px 8px; display:flex; justify-content:space-between; }
+  canvas#trace{ width:100%; height:64px; display:block; }
+
+  .stats{ display:flex; justify-content:space-between; padding:2px 4px; }
+  .stat{ text-align:left; }
+  .stat .label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .stat .value{ font-size:18px; font-weight:500; }
+  .stat.right{ text-align:right; }
+  .cost-line{ font-size:12.5px; color:var(--muted); margin-top:2px; }
+
+  .offline-note{ margin-top:26px; font-size:13px; color:var(--muted); text-align:center; line-height:1.5; }
+
+  /* ---------- Bottom sheets (shared) ---------- */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(10,12,14,0.6); z-index:10;
+    align-items:flex-end; justify-content:center;
+  }
+  .overlay.open{ display:flex; }
+  .sheet{
+    width:100%; max-width:460px; max-height:88vh; overflow-y:auto;
+    background:var(--surface); border:1px solid var(--ring); border-bottom:none;
+    border-radius:22px 22px 0 0; padding:22px 20px calc(24px + env(safe-area-inset-bottom));
+    animation:sheet-up .25s ease-out;
+  }
+  @keyframes sheet-up{ from{transform:translateY(16px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+  .sheet-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .sheet-header h2{ font-family:'Space Grotesk',sans-serif; font-size:17px; font-weight:600; margin:0; }
+
+  .settings-section{ padding:18px 0; border-top:1px solid var(--ring); }
+  .settings-section:first-of-type{ border-top:none; padding-top:0; }
+  .settings-section .row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .settings-section .row + .row{ margin-top:12px; }
+  .settings-section .s-title{ font-size:14px; font-weight:500; }
+  .settings-section .s-desc{ font-size:12.5px; color:var(--muted); margin-top:2px; line-height:1.4; }
+  .settings-section code{
+    background:var(--surface-2); border-radius:5px; padding:2px 6px; font-size:11.5px;
+    font-family:'Space Grotesk',monospace; display:inline-block; margin:2px 0; word-break:break-all;
+  }
+
+  select, .num-input, input[type="text"]{
+    background:var(--surface-2); border:1px solid var(--ring); color:var(--text);
+    border-radius:9px; padding:9px 11px; font-size:14px; font-family:inherit; outline:none;
+  }
+  select:focus, .num-input:focus, input[type="text"]:focus{ border-color:var(--accent); }
+  .num-input{ width:84px; text-align:right; }
+
+  .switch{ position:relative; width:44px; height:26px; flex-shrink:0; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch .slider{
+    position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--ring);
+    border-radius:14px; cursor:pointer; transition:background .2s ease;
+  }
+  .switch .slider::before{
+    content:''; position:absolute; width:18px; height:18px; left:3px; top:2px;
+    background:#c7cdd4; border-radius:50%; transition:transform .2s ease, background .2s ease;
+  }
+  .switch input:checked + .slider{ background:rgba(240,168,60,0.35); border-color:rgba(240,168,60,0.5); }
+  .switch input:checked + .slider::before{ transform:translateX(18px); background:var(--accent); }
+
+  .save-row{ margin-top:16px; }
+  .save-row button.primary{ width:100%; }
+  .save-status{ font-size:12.5px; color:var(--live); text-align:center; margin-top:8px; min-height:16px; }
+
+  .day-chips{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .day-chip{
+    width:34px; height:34px; border-radius:50%; background:var(--surface-2); border:1px solid var(--ring);
+    color:var(--muted); font-size:12px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; user-select:none; transition:all .15s ease;
+  }
+  .day-chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+
+  /* ---------- Timers sheet ---------- */
+  .tab-bar{ display:flex; gap:6px; background:var(--surface-2); border-radius:11px; padding:4px; margin-bottom:20px; }
+  .tab-btn{
+    flex:1; background:none; border:none; color:var(--muted); font-family:inherit; font-size:13px;
+    font-weight:500; padding:9px 4px; border-radius:8px; cursor:pointer; transition:all .15s ease;
+  }
+  .tab-btn.active{ background:var(--surface); color:var(--text); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
+  .dur-chip{
+    background:var(--surface-2); border:1px solid var(--ring); color:var(--text);
+    border-radius:20px; padding:8px 16px; font-family:inherit; font-size:13px; cursor:pointer;
+  }
+  .dur-chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .custom-dur-row{ display:flex; align-items:center; gap:10px; margin:14px 0; }
+  .custom-dur-row input{ width:80px; }
+  .once-countdown{
+    text-align:center; font-family:'Space Grotesk',sans-serif; font-size:32px; font-weight:600;
+    margin:18px 0 6px;
+  }
+  .alarm-row{
+    background:var(--surface-2); border:1px solid var(--ring); border-radius:14px; padding:16px; margin-bottom:12px;
+  }
+  .alarm-row .row{ align-items:flex-start; }
+  .alarm-row input[type="time"]{
+    background:none; border:none; color:var(--text); font-family:'Space Grotesk',sans-serif;
+    font-size:24px; font-weight:600; padding:0; width:auto;
+  }
+  .alarm-row select{ margin-top:8px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .status-dot.live::after, .toggle-ripple.active, .sheet{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ LOGIN ============ -->
+  <div id="login-screen">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="13" cy="13" r="12" stroke="#F0A83C" stroke-width="2"/>
+        <path d="M13 6V12" stroke="#F0A83C" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h1>Plug</h1>
+    </div>
+    <p class="sub">Enter your password to control your smart plugs from anywhere.</p>
+    <form id="login-form" style="display:flex; flex-direction:column; gap:14px;">
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" required />
+      </div>
+      <div id="login-error"></div>
+      <button type="submit" class="primary" id="login-btn">Unlock</button>
+    </form>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div id="app">
+    <div class="fw-banner" id="fw-banner" style="display:none;"></div>
+    <div class="topbar">
+      <button class="device-switch" id="device-switch-btn">
+        <span class="name" id="device-name">Plug</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="topbar-actions">
+        <button class="icon-btn timers-pill" id="timers-btn" aria-label="Timers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <span>Timers</span>
+        </button>
+        <button class="icon-btn" id="settings-btn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button class="logout" id="logout-btn">Sign out</button>
+      </div>
+    </div>
+    <div class="status-row">
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-label" id="status-label">Connecting…</span>
+    </div>
+
+    <div class="hero">
+      <div class="toggle-wrap">
+        <div class="toggle-ripple" id="ripple"></div>
+        <div id="power-toggle" role="button" aria-label="Toggle power">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2V11" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6.5 6.5C4.6 8.1 3.5 10.4 3.5 13C3.5 17.7 7.3 21.5 12 21.5C16.7 21.5 20.5 17.7 20.5 13C20.5 10.4 19.4 8.1 17.5 6.5" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="reading">
+        <div class="watts"><span id="watts">–</span><span class="unit">W</span></div>
+        <div class="sub" id="sub-reading">– A · – V</div>
+      </div>
+      <div class="timer-status" id="timer-status"></div>
+    </div>
+
+    <div class="trace-wrap" id="trace-wrap" role="button">
+      <div class="trace-label"><span>Power draw</span><span id="trace-range">tap for daily history ›</span></div>
+      <canvas id="trace"></canvas>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">Today</div>
+        <div class="value num" id="kwh-today">– kWh</div>
+        <div class="cost-line" id="cost-today"></div>
+      </div>
+      <div class="stat right">
+        <div class="label">Total</div>
+        <div class="value num" id="kwh-total">– kWh</div>
+        <div class="cost-line" id="cost-total"></div>
+      </div>
+    </div>
+
+    <div class="offline-note" id="offline-note" style="display:none;">
+      Plug hasn't checked in recently. It may be powered off or offline — controls will apply as soon as it reconnects.
+    </div>
+  </div>
+
+  <!-- ============ DEVICE SWITCHER SHEET ============ -->
+  <div class="overlay" id="device-overlay">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Your plugs</h2>
+        <button class="icon-btn" data-close="device-overlay" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="device-list"></div>
+      <div class="save-row">
+        <button class="secondary" id="add-device-btn" style="width:100%;">+ Add another plug</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ADD PLUG SHEET ============ -->
+  <div class="overlay" id="add-device-overlay">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Add another plug</h2>
+        <button class="icon-btn" data-close="add-device-overlay" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="s-desc" style="margin-bottom:14px;">Do this on the new plug first, then add it below.</div>
+
+      <div class="settings-section" style="padding-top:0;">
+        <div class="s-title">1. Flash it</div>
+        <div class="s-desc">On the new plug's Tasmota Console: type<br><code style="color:var(--accent);">OtaUrl https://Jason2866.github.io/Tasmota-specials/firmware/tasmota/other/tasmota-tls.bin</code><br>then <code style="color:var(--accent);">Upgrade 1</code>. Wait for it to reboot.<br><span style="opacity:0.75;">(Skip this step if it's already an ESP32-C3 chip like this one — standard Tasmota32 already supports TLS.)</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="s-title">2. Set up MQTT</div>
+        <div class="s-desc">Configuration → Configure MQTT on the new plug:<br>
+          Host: <code style="color:var(--accent);">bcf21211.ala.asia-southeast1.emqxsl.com</code><br>
+          Port: <code style="color:var(--accent);">8883</code><br>
+          User: <code style="color:var(--accent);">smartplug_device</code><br>
+          Password: <code style="color:var(--accent);">Varun030201@</code><br>
+          <strong>Topic: give it a unique name</strong>, e.g. <code style="color:var(--accent);">qubo_plug_2</code> — this is the one thing that must differ from your other plugs.
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="s-title">3. Enable TLS</div>
+        <div class="s-desc">In Console: <code style="color:var(--accent);">SetOption132 1</code> then <code style="color:var(--accent);">MqttFingerprint1 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0</code> then <code style="color:var(--accent);">Restart 1</code>. (Skip if this plug is ESP32-C3 — it connects with TLS out of the box.)</div>
+      </div>
+      <div class="settings-section">
+        <div class="s-title">4. Add it here</div>
+        <div class="s-desc" style="margin-bottom:10px;">Once its console shows it connected to MQTT, enter the same details here:</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label for="new-device-name">Name</label>
+          <input type="text" id="new-device-name" placeholder="e.g. Bedroom Fan" />
+        </div>
+        <div class="field">
+          <label for="new-device-topic">MQTT Topic (exactly as set above)</label>
+          <input type="text" id="new-device-topic" placeholder="e.g. qubo_plug_2" />
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="primary" id="confirm-add-device-btn" style="width:100%;">Add this plug</button>
+        <div class="save-status" id="add-device-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TIMERS SHEET ============ -->
+  <div class="overlay" id="timers-overlay">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Timers</h2>
+        <button class="icon-btn" data-close="timers-overlay" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="once">Once</button>
+        <button class="tab-btn" data-tab="permanent">Permanent</button>
+        <button class="tab-btn" data-tab="schedule">Schedule</button>
+      </div>
+
+      <!-- ONCE -->
+      <div class="tab-panel active" id="tab-once">
+        <div class="s-desc">Turns the plug on now, then off again automatically after this long — a one-time run.</div>
+        <div class="chip-row" id="once-chips">
+          <button class="dur-chip" data-min="1">1 min</button>
+          <button class="dur-chip" data-min="5">5 min</button>
+          <button class="dur-chip" data-min="10">10 min</button>
+          <button class="dur-chip" data-min="30">30 min</button>
+          <button class="dur-chip" data-min="60">1 hr</button>
+        </div>
+        <div class="custom-dur-row">
+          <input type="number" class="num-input" id="once-custom" min="1" placeholder="Custom" />
+          <span class="s-desc" style="margin:0;">minutes</span>
+        </div>
+        <div class="once-countdown" id="once-countdown" style="display:none;"></div>
+        <div class="save-row">
+          <button class="primary" id="once-start-btn">Start</button>
+          <button class="secondary" id="once-cancel-btn" style="width:100%; margin-top:10px; display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- PERMANENT -->
+      <div class="tab-panel" id="tab-permanent">
+        <div class="s-desc">Every time this plug turns on — from the app, a schedule, or the physical button — it'll switch itself back off after this long, unless a "once" timer is running or an on+off schedule is active. Set 0 to turn this off.</div>
+        <div class="row" style="margin-top:16px;">
+          <div class="s-title">Auto-off after</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" class="num-input" id="permanent-input" min="0" step="1" />
+            <span class="s-desc" style="margin:0;">min</span>
+          </div>
+        </div>
+        <div class="save-row">
+          <button class="primary" id="permanent-save-btn">Save</button>
+          <div class="save-status" id="permanent-save-status"></div>
+        </div>
+        <div class="timer-status" id="permanent-status-line" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="tab-panel" id="tab-schedule">
+        <div class="s-desc" style="margin-bottom:14px;">Up to 4 alarms. Runs on the plug itself, even if this app is closed.</div>
+        <div id="schedule-slots"></div>
+        <div class="save-row">
+          <button class="primary" id="schedule-save-btn">Save schedule</button>
+          <div class="save-status" id="schedule-save-status"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS SHEET ============ -->
+  <div class="overlay" id="settings-overlay">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Settings</h2>
+        <button class="icon-btn" data-close="settings-overlay" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="row"><div>
+          <div class="s-title">When power comes back after an outage</div>
+          <div class="s-desc">What the plug should do once electricity returns.</div>
+        </div></div>
+        <div class="row" style="margin-top:12px;">
+          <select id="poweronstate-select" style="width:100%;">
+            <option value="0">Stay off</option>
+            <option value="1">Turn on</option>
+            <option value="3">Remember last state</option>
+            <option value="2">Flip opposite of last state</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Overload protection</div>
+            <div class="s-desc">Auto shut-off if power draw goes above this. Set 0 to disable.</div>
+          </div>
+          <input type="number" class="num-input" id="maxpower-input" min="0" step="10" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Lock physical button</div>
+            <div class="s-desc">Stops the button on the plug itself from toggling power — app-only control.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="childlock-toggle" /><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Alexa / Google Home</div>
+            <div class="s-desc">Local voice control on your home WiFi — no cloud account needed.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="voice-toggle" /><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Electricity rate</div>
+            <div class="s-desc">Used to estimate cost from your usage. ₹ per kWh.</div>
+          </div>
+          <input type="number" class="num-input" id="tariff-input" min="0" step="0.5" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Usage history</div>
+            <div class="s-desc">Clears the kWh counters below so you can start fresh — can't be undone.</div>
+          </div>
+          <button class="danger-outline" id="reset-energy-btn">Reset</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="row">
+          <div>
+            <div class="s-title">Turn off when drawing 0 W</div>
+            <div class="s-desc">If the plugged-in device sits at zero power for 30 seconds straight (e.g. fully charged, or switched off at its own switch), the plug cuts power to save standby electricity.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="zeropower-toggle" /><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="s-title" style="margin-bottom:2px;">Calibrate readings</div>
+        <div class="s-desc" style="margin-bottom:12px;">Plug in something with a precisely known rating (a rated appliance or an incandescent bulb), let it run steady for a minute, then enter what it should actually read below. Leave any field blank to skip calibrating it.</div>
+        <div class="row">
+          <div class="s-title">Actual power</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" class="num-input" id="cal-power-input" step="0.1" placeholder="W" />
+            <span class="s-desc" style="margin:0;">W</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="s-title">Actual voltage</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" class="num-input" id="cal-voltage-input" step="0.1" placeholder="V" />
+            <span class="s-desc" style="margin:0;">V</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="s-title">Actual current</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="number" class="num-input" id="cal-current-input" step="0.001" placeholder="A" />
+            <span class="s-desc" style="margin:0;">A</span>
+          </div>
+        </div>
+        <div class="save-row">
+          <button class="secondary" id="calibrate-btn" style="width:100%;">Calibrate</button>
+          <div class="save-status" id="calibrate-status"></div>
+        </div>
+      </div>
+
+      <div class="save-row">
+        <button class="primary" id="settings-save">Save settings</button>
+        <div class="save-status" id="settings-save-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HISTORY SHEET ============ -->
+  <div class="overlay" id="history-overlay">
+    <div class="sheet">
+      <div class="sheet-header">
+        <h2>Daily history</h2>
+        <button class="icon-btn" data-close="history-overlay" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="s-desc" style="margin-bottom:14px;">Built up automatically while the app is open — most accurate if you check in daily. Not a substitute for the plug's own Today/Total counters.</div>
+      <canvas id="history-bars"></canvas>
+      <div class="history-summary" id="history-summary"></div>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+  // ---------------- CONFIG ----------------
+  const APP_PASSWORD = 'Varun030201@';
+  const MQTT_URL = 'wss://bcf21211.ala.asia-southeast1.emqxsl.com:8084/mqtt';
+  const MQTT_USER = 'smartplug_device';
+  const MQTT_PASS = 'Varun030201@';
+  // -----------------------------------------
+
+  // ---- Device management (multi-plug) ----
+  function loadDevices(){
+    try {
+      const raw = localStorage.getItem('plug_devices');
+      if (raw) return JSON.parse(raw);
+    } catch(_) {}
+    return [{ name: 'Plug 1', topic: 'qubo_plug_1' }];
+  }
+  function saveDevices(devices){ localStorage.setItem('plug_devices', JSON.stringify(devices)); }
+
+  let devices = loadDevices();
+  let currentDeviceIndex = parseInt(localStorage.getItem('plug_current_index') || '0', 10);
+  if (currentDeviceIndex >= devices.length) currentDeviceIndex = 0;
+  let TOPIC = devices[currentDeviceIndex].topic;
+  const deviceLiveData = {}; // topic -> {online, isOn, watts}
+
+  function setCurrentDevice(i){
+    currentDeviceIndex = i;
+    localStorage.setItem('plug_current_index', String(i));
+    TOPIC = devices[i].topic;
+    document.getElementById('device-name').textContent = devices[i].name;
+    resetDashboardUI();
+    if (mqttClient) { mqttClient.end(true); mqttClient = null; }
+    connectMqtt();
+  }
+
+  function resetDashboardUI(){
+    document.getElementById('watts').textContent = '–';
+    document.getElementById('sub-reading').textContent = '– A · – V';
+    document.getElementById('kwh-today').textContent = '– kWh';
+    document.getElementById('kwh-total').textContent = '– kWh';
+    document.getElementById('cost-today').textContent = '';
+    document.getElementById('cost-total').textContent = '';
+    document.getElementById('power-toggle').classList.remove('on');
+    history.length = 0;
+    drawTrace();
+    permanentMinutes = 0;
+    permanentEnabled = false;
+    permanentRunEndsAt = 0;
+    if (permanentPollInterval) { clearInterval(permanentPollInterval); permanentPollInterval = null; }
+    onceSuppressedPermanent = false;
+    scheduleTimers = [null, null, null, null];
+    onceActive = false;
+    updateTimerStatusLine();
+    firmwareCheckDone = false;
+    document.getElementById('fw-banner').style.display = 'none';
+  }
+
+  function renderDeviceList(){
+    const list = document.getElementById('device-list');
+    list.innerHTML = '';
+    devices.forEach((d, i) => {
+      const live = deviceLiveData[d.topic] || { online: false, isOn: false, watts: null };
+      const row = document.createElement('div');
+      row.className = 'settings-section';
+      row.style.borderTop = i === 0 ? 'none' : '1px solid var(--ring)';
+      const statusText = live.online
+        ? `${live.isOn ? 'On' : 'Off'}${live.watts !== null ? ' · ' + Math.round(live.watts) + ' W' : ''}`
+        : 'Offline';
+      row.innerHTML = `
+        <div class="row">
+          <div>
+            <div class="s-title" style="${i === currentDeviceIndex ? 'color:var(--accent);' : ''}">${d.name}${i === currentDeviceIndex ? ' · current' : ''}</div>
+            <div class="s-desc" style="margin-top:3px;">${statusText}</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            ${live.online ? '<button class="secondary" data-toggle="'+i+'">'+(live.isOn ? 'Turn off' : 'Turn on')+'</button>' : ''}
+            ${i !== currentDeviceIndex ? '<button class="secondary" data-select="'+i+'">Open</button>' : ''}
+            <button class="secondary" data-rename="${i}">Rename</button>
+            ${devices.length > 1 ? '<button class="danger-outline" data-remove="'+i+'">Remove</button>' : ''}
+          </div>
+        </div>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('[data-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.toggle, 10);
+        const d = devices[i];
+        const live = deviceLiveData[d.topic] || { isOn: false };
+        if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(`cmnd/${d.topic}/POWER`, live.isOn ? 'OFF' : 'ON');
+        }
+      });
+    });
+    list.querySelectorAll('[data-rename]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.rename, 10);
+        const newName = prompt('New name for this plug:', devices[i].name);
+        if (!newName || !newName.trim()) return;
+        devices[i].name = newName.trim();
+        saveDevices(devices);
+        if (i === currentDeviceIndex) document.getElementById('device-name').textContent = devices[i].name;
+        renderDeviceList();
+      });
+    });
+    list.querySelectorAll('[data-select]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setCurrentDevice(parseInt(btn.dataset.select, 10));
+        document.getElementById('device-overlay').classList.remove('open');
+      });
+    });
+    list.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.remove, 10);
+        if (!confirm(`Remove "${devices[i].name}" from this app? (Doesn't affect the physical plug.)`)) return;
+        devices.splice(i, 1);
+        saveDevices(devices);
+        if (currentDeviceIndex >= devices.length) currentDeviceIndex = devices.length - 1;
+        setCurrentDevice(currentDeviceIndex);
+        renderDeviceList();
+      });
+    });
+  }
+
+  document.getElementById('device-switch-btn').addEventListener('click', () => {
+    renderDeviceList();
+    document.getElementById('device-overlay').classList.add('open');
+  });
+  setInterval(() => {
+    if (document.getElementById('device-overlay').classList.contains('open')) renderDeviceList();
+  }, 3000);
+  document.getElementById('add-device-btn').addEventListener('click', () => {
+    document.getElementById('device-overlay').classList.remove('open');
+    document.getElementById('new-device-name').value = '';
+    document.getElementById('new-device-topic').value = '';
+    document.getElementById('add-device-overlay').classList.add('open');
+  });
+  document.getElementById('confirm-add-device-btn').addEventListener('click', () => {
+    const name = document.getElementById('new-device-name').value.trim();
+    const topic = document.getElementById('new-device-topic').value.trim();
+    const statusEl = document.getElementById('add-device-status');
+    if (!name || !topic) { statusEl.textContent = 'Enter both a name and its MQTT Topic.'; return; }
+    if (devices.some(d => d.topic === topic)) { statusEl.textContent = 'A plug with that Topic is already added.'; return; }
+    devices.push({ name, topic });
+    saveDevices(devices);
+    document.getElementById('add-device-overlay').classList.remove('open');
+    renderDeviceList();
+    document.getElementById('device-overlay').classList.add('open');
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.subscribe(`tele/${topic}/STATE`);
+      mqttClient.subscribe(`tele/${topic}/SENSOR`);
+      mqttClient.subscribe(`tele/${topic}/LWT`);
+    }
+  });
+
+  // ---- generic sheet open/close ----
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => document.getElementById(btn.dataset.close).classList.remove('open'));
+  });
+  document.querySelectorAll('.overlay').forEach(ov => {
+    ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+
+  const loginScreen = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+  const loginForm = document.getElementById('login-form');
+  const loginError = document.getElementById('login-error');
+
+  let mqttClient = null;
+  let lastSeen = 0;
+  let desiredOn = false;
+  let awaitingConfirm = false;
+  let permanentMinutes = 0;
+  let permanentEnabled = false;
+  let permanentRunEndsAt = 0;
+  let permanentPollInterval = null;
+  let onceSuppressedPermanent = false;
+  let scheduleTimers = [null, null, null, null]; // parsed Timer1-4 objects
+  let onceActive = false;
+  let onceEndsAt = 0;
+  let onceCountdownInterval = null;
+  const history = []; // {t, w}
+  const HISTORY_MS = 5 * 60 * 1000;
+
+  function showApp(){
+    loginScreen.style.display = 'none';
+    app.style.display = 'block';
+    document.getElementById('device-name').textContent = devices[currentDeviceIndex].name;
+    connectMqtt();
+    requestAnimationFrame(resizeCanvas);
+  }
+  function showLogin(){
+    app.style.display = 'none';
+    loginScreen.style.display = 'flex';
+    if (mqttClient) { mqttClient.end(true); mqttClient = null; }
+  }
+
+  const quickAction = new URLSearchParams(window.location.search).get('action'); // from home screen shortcuts
+  if (localStorage.getItem('plug_unlocked') === 'yes') {
+    showApp();
+    if (quickAction === 'on' || quickAction === 'off') {
+      const trySend = () => {
+        if (mqttClient && mqttClient.connected) {
+          mqttClient.publish(`cmnd/${TOPIC}/POWER`, quickAction === 'on' ? 'ON' : 'OFF');
+          window.history.replaceState({}, '', window.location.pathname); // clean the URL so a later manual reload doesn't repeat this
+        } else {
+          setTimeout(trySend, 400);
+        }
+      };
+      setTimeout(trySend, 600);
+    }
+  }
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+    const password = document.getElementById('password').value;
+    if (password !== APP_PASSWORD) { loginError.textContent = 'Wrong password.'; return; }
+    localStorage.setItem('plug_unlocked', 'yes');
+    showApp();
+  });
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem('plug_unlocked');
+    showLogin();
+  });
+
+  // ---- MQTT ----
+  function connectMqtt(){
+    setStatus('connecting');
+    mqttClient = mqtt.connect(MQTT_URL, {
+      username: MQTT_USER,
+      password: MQTT_PASS,
+      clientId: 'webapp_' + Math.random().toString(16).slice(2),
+      reconnectPeriod: 3000,
+      connectTimeout: 8000,
+    });
+
+    mqttClient.on('connect', () => {
+      mqttClient.subscribe(`tele/${TOPIC}/STATE`);
+      mqttClient.subscribe(`tele/${TOPIC}/SENSOR`);
+      mqttClient.subscribe(`stat/${TOPIC}/POWER`);
+      mqttClient.subscribe(`stat/${TOPIC}/RESULT`);
+      mqttClient.subscribe(`stat/${TOPIC}/STATUS8`);
+      mqttClient.subscribe(`stat/${TOPIC}/STATUS11`);
+      mqttClient.subscribe(`stat/${TOPIC}/STATUS2`);
+      mqttClient.subscribe(`tele/${TOPIC}/LWT`);
+      mqttClient.publish(`cmnd/${TOPIC}/Status`, '8');
+      mqttClient.publish(`cmnd/${TOPIC}/Status`, '11');
+      mqttClient.publish(`cmnd/${TOPIC}/Status`, '2');
+      // pull current settings for the status line under the power button
+      mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, '');
+      for (let i = 1; i <= NUM_SLOTS; i++) mqttClient.publish(`cmnd/${TOPIC}/Timer${i}`, '');
+      // lightweight subscriptions for every OTHER plug, to power the all-plugs overview
+      devices.forEach(d => {
+        if (d.topic === TOPIC) return;
+        mqttClient.subscribe(`tele/${d.topic}/STATE`);
+        mqttClient.subscribe(`tele/${d.topic}/SENSOR`);
+        mqttClient.subscribe(`tele/${d.topic}/LWT`);
+      });
+    });
+
+    mqttClient.on('reconnect', () => setStatus('connecting'));
+    mqttClient.on('close', () => setStatus('offline'));
+    mqttClient.on('error', () => setStatus('offline'));
+
+    mqttClient.on('message', (topic, payload) => {
+      const text = payload.toString();
+      const parts = topic.split('/');
+      const msgDeviceTopic = parts[1];
+      const subtopic = parts[2];
+
+      if (msgDeviceTopic !== TOPIC) {
+        updateOtherDeviceLiveData(msgDeviceTopic, subtopic, text);
+        return;
+      }
+
+      if (topic.endsWith('/LWT')) {
+        if (text.trim() === 'Online') { lastSeen = Date.now(); setStatus('live'); }
+        else setStatus('offline');
+        return;
+      }
+      lastSeen = Date.now();
+
+      if (topic.endsWith('/STATE') || topic.endsWith('/RESULT')) {
+        try {
+          const j = JSON.parse(text);
+          if (j.POWER !== undefined) applyPowerState(j.POWER === 'ON');
+          if (j.PowerOnState !== undefined) setSelectFromResult('poweronstate-select', j.PowerOnState);
+          if (j.MaxPower !== undefined) document.getElementById('maxpower-input').value = j.MaxPower;
+          if (j.PulseTime1 !== undefined) applyPulseTimeToUI(j.PulseTime1);
+          if (j.SetOption73 !== undefined) document.getElementById('childlock-toggle').checked = (String(j.SetOption73) === 'ON' || j.SetOption73 === 1 || j.SetOption73 === '1');
+          if (j.Emulation !== undefined) document.getElementById('voice-toggle').checked = (Number(j.Emulation) > 0);
+          for (let i = 1; i <= NUM_SLOTS; i++) {
+            if (j[`Timer${i}`] !== undefined) { applyTimerToUI(i, j[`Timer${i}`]); scheduleTimers[i-1] = j[`Timer${i}`]; updateTimerStatusLine(); }
+          }
+          if (j.Rule2 !== undefined && j.Rule2.State !== undefined) {
+            document.getElementById('zeropower-toggle').checked = (j.Rule2.State === 'ON');
+          }
+        } catch(_) {}
+      }
+      if (topic.endsWith('/POWER')) applyPowerState(text.trim() === 'ON');
+      if (topic.endsWith('/SENSOR')) {
+        try {
+          const e = JSON.parse(text).ENERGY;
+          if (e) updateReadings(e.Power ?? 0, e.Current ?? 0, e.Voltage ?? 0, e.Today ?? 0, e.Total ?? 0);
+        } catch(_) {}
+      }
+      if (topic.endsWith('/STATUS8')) {
+        try {
+          const e = JSON.parse(text).StatusSNS?.ENERGY;
+          if (e) updateReadings(e.Power ?? 0, e.Current ?? 0, e.Voltage ?? 0, e.Today ?? 0, e.Total ?? 0);
+        } catch(_) {}
+      }
+      if (topic.endsWith('/STATUS11')) {
+        try {
+          const p = JSON.parse(text).StatusSTS?.POWER;
+          if (p !== undefined) applyPowerState(p === 'ON');
+        } catch(_) {}
+      }
+      if (topic.endsWith('/STATUS2')) {
+        try {
+          const ver = JSON.parse(text).StatusFWR?.Version;
+          if (ver) checkFirmwareVersion(ver);
+        } catch(_) {}
+      }
+      setStatus('live');
+    });
+  }
+
+  let firmwareCheckDone = false;
+  function checkFirmwareVersion(installedVersion){
+    if (firmwareCheckDone) return;
+    firmwareCheckDone = true;
+    const dismissed = localStorage.getItem('fw_dismissed_version');
+    fetch('https://api.github.com/repos/arendst/Tasmota/releases/latest')
+      .then(r => r.json())
+      .then(data => {
+        const latestTag = (data.tag_name || '').replace(/^v/i, '');
+        if (!latestTag) return;
+        const installedClean = installedVersion.split('(')[0].trim();
+        const cmp = compareVersions(installedClean, latestTag);
+        if (cmp < 0 && dismissed !== latestTag) {
+          const banner = document.getElementById('fw-banner');
+          banner.style.display = 'flex';
+          banner.innerHTML = `<span>Tasmota update available: ${installedClean} → ${latestTag}. <a href="https://github.com/arendst/Tasmota/releases/latest" target="_blank" rel="noopener">See release</a></span><button id="fw-dismiss">✕</button>`;
+          document.getElementById('fw-dismiss').addEventListener('click', () => {
+            localStorage.setItem('fw_dismissed_version', latestTag);
+            banner.style.display = 'none';
+          });
+        }
+      })
+      .catch(() => {}); // silent — cosmetic feature only, never blocks anything
+  }
+  function compareVersions(a, b){
+    const pa = a.split('.').map(n => parseInt(n, 10) || 0);
+    const pb = b.split('.').map(n => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const x = pa[i] || 0, y = pb[i] || 0;
+      if (x < y) return -1;
+      if (x > y) return 1;
+    }
+    return 0;
+  }
+
+  function updateOtherDeviceLiveData(devTopic, subtopic, text){
+    if (!deviceLiveData[devTopic]) deviceLiveData[devTopic] = { online: false, isOn: false, watts: null };
+    const d = deviceLiveData[devTopic];
+    if (subtopic === 'LWT') {
+      d.online = (text.trim() === 'Online');
+    } else if (subtopic === 'STATE') {
+      try { const j = JSON.parse(text); if (j.POWER !== undefined) { d.isOn = (j.POWER === 'ON'); d.online = true; } } catch(_) {}
+    } else if (subtopic === 'SENSOR') {
+      try { const e = JSON.parse(text).ENERGY; if (e) { d.watts = e.Power ?? 0; d.online = true; } } catch(_) {}
+    }
+    if (document.getElementById('device-overlay').classList.contains('open')) renderDeviceList();
+  }
+
+  function setSelectFromResult(id, value){
+    const el = document.getElementById(id);
+    const asNum = String(value).match(/\d+/);
+    if (asNum) el.value = asNum[0];
+  }
+  function decodePulseSeconds(raw){
+    const v = parseInt(raw, 10) || 0;
+    if (v === 0) return 0;
+    if (v <= 111) return v / 10; // 0.1s resolution range
+    return v - 100; // 1s resolution range, offset by 100
+  }
+  function applyPulseTimeToUI(value){
+    // Tasmota returns this as an object: {"Set":160,"Remaining":148} — and
+    // crucially, BOTH fields use the same quirky offset encoding, not plain seconds.
+    let rawSet = 0, rawRemaining = 0;
+    if (value && typeof value === 'object') {
+      rawSet = parseInt(value.Set, 10) || 0;
+      rawRemaining = parseInt(value.Remaining, 10) || 0;
+    } else {
+      rawSet = parseInt(value, 10) || 0;
+    }
+    const totalSeconds = decodePulseSeconds(rawSet);
+    const minutes = Math.round(totalSeconds / 60);
+    permanentMinutes = minutes;
+    permanentEnabled = totalSeconds > 0;
+    document.getElementById('permanent-input').value = minutes;
+    if (minutes > 0) localStorage.setItem('plug_permanent_remembered', String(minutes));
+    const remainingSeconds = decodePulseSeconds(rawRemaining);
+    if (remainingSeconds > 0) {
+      permanentRunEndsAt = Date.now() + remainingSeconds * 1000;
+    } else if (!desiredOn) {
+      permanentRunEndsAt = 0;
+    }
+    renderPermanentStatusLine();
+    updateTimerStatusLine();
+  }
+  function renderPermanentStatusLine(){
+    const el = document.getElementById('permanent-status-line');
+    if (!el) return;
+    el.innerHTML = '';
+    const line = document.createElement('div');
+    line.className = 'line muted';
+    line.textContent = permanentEnabled
+      ? `Currently: ${permanentMinutes} min · enabled`
+      : 'Currently: disabled';
+    el.appendChild(line);
+  }
+  function applyPowerState(isOn){
+    const wasOn = desiredOn;
+    desiredOn = isOn;
+    awaitingConfirm = false;
+    const toggle = document.getElementById('power-toggle');
+    toggle.classList.remove('disabled');
+    toggle.classList.toggle('on', isOn);
+
+    // Plug just turned on: if permanent is enabled (and not suppressed by
+    // a "once" run), start a live countdown to when it'll auto-off, and
+    // keep polling the device's own Remaining value so it never drifts.
+    if (!wasOn && isOn && permanentEnabled && permanentMinutes > 0 && !onceSuppressedPermanent) {
+      permanentRunEndsAt = Date.now() + permanentMinutes * 60 * 1000;
+      if (permanentPollInterval) clearInterval(permanentPollInterval);
+      permanentPollInterval = setInterval(() => {
+        if (mqttClient && mqttClient.connected) mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, '');
+      }, 3000);
+    }
+    if (wasOn && !isOn) {
+      permanentRunEndsAt = 0;
+      if (permanentPollInterval) { clearInterval(permanentPollInterval); permanentPollInterval = null; }
+    }
+
+    // If a "once" timer suppressed the permanent auto-off for this run,
+    // restore the permanent setting as soon as the plug turns off again.
+    if (wasOn && !isOn && onceSuppressedPermanent) {
+      onceSuppressedPermanent = false;
+      if (permanentEnabled && permanentMinutes > 0 && mqttClient && mqttClient.connected) {
+        mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, String(permanentMinutes * 60 + 100));
+      }
+      onceActive = false;
+      if (onceCountdownInterval) clearInterval(onceCountdownInterval);
+      document.getElementById('once-countdown').style.display = 'none';
+      document.getElementById('once-cancel-btn').style.display = 'none';
+      document.getElementById('once-start-btn').textContent = 'Start';
+    }
+    updateTimerStatusLine();
+  }
+  function updateReadings(w, a, v, today, total){
+    document.getElementById('watts').textContent = Math.round(w);
+    document.getElementById('sub-reading').textContent = `${a.toFixed(2)} A · ${Math.round(v)} V`;
+    document.getElementById('kwh-today').textContent = `${today.toFixed(2)} kWh`;
+    document.getElementById('kwh-total').textContent = `${total.toFixed(2)} kWh`;
+    updateCostDisplay();
+    const now = Date.now();
+    history.push({ t: now, w });
+    while (history.length && now - history[0].t > HISTORY_MS) history.shift();
+    drawTrace();
+    recordDailyHistory(today);
+  }
+
+  // ---- Rolling daily history (best-effort, builds up while the app is open) ----
+  function dailyHistoryKey(){ return `plug_daily_${TOPIC}`; }
+  function loadDailyHistory(){
+    try { return JSON.parse(localStorage.getItem(dailyHistoryKey())) || []; } catch(_) { return []; }
+  }
+  function saveDailyHistory(arr){ localStorage.setItem(dailyHistoryKey(), JSON.stringify(arr)); }
+  function recordDailyHistory(todayKwh){
+    const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, local-ish enough for this purpose
+    const arr = loadDailyHistory();
+    const existing = arr.find(e => e.date === dateStr);
+    if (existing) existing.kwh = todayKwh;
+    else arr.push({ date: dateStr, kwh: todayKwh });
+    arr.sort((a, b) => a.date.localeCompare(b.date));
+    while (arr.length > 30) arr.shift();
+    saveDailyHistory(arr);
+    if (document.getElementById('history-overlay').classList.contains('open')) renderHistoryBars();
+  }
+  function renderHistoryBars(){
+    const arr = loadDailyHistory().slice(-14);
+    const canvas = document.getElementById('history-bars');
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const w = rect.width, h = rect.height;
+    ctx.clearRect(0, 0, w, h);
+    const summary = document.getElementById('history-summary');
+    if (arr.length === 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '13px Inter';
+      ctx.fillText('No history yet — check back after using the app for a day or two.', 8, h / 2);
+      summary.textContent = '';
+      return;
+    }
+    const maxKwh = Math.max(0.1, ...arr.map(e => e.kwh));
+    const barGap = 6;
+    const barWidth = (w - barGap * (arr.length - 1)) / arr.length;
+    arr.forEach((e, i) => {
+      const barHeight = Math.max(2, (e.kwh / maxKwh) * (h - 28));
+      const x = i * (barWidth + barGap);
+      const y = h - barHeight - 18;
+      ctx.fillStyle = '#F0A83C';
+      ctx.beginPath();
+      ctx.roundRect(x, y, barWidth, barHeight, 4);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '9px Inter';
+      ctx.textAlign = 'center';
+      const label = e.date.slice(5).replace('-', '/');
+      ctx.fillText(label, x + barWidth / 2, h - 6);
+    });
+    const totalKwh = arr.reduce((s, e) => s + e.kwh, 0);
+    const tariff = parseFloat(localStorage.getItem('plug_tariff') || '8');
+    summary.innerHTML = `<span>${arr.length}-day total: ${totalKwh.toFixed(2)} kWh</span><span>≈ ₹${(totalKwh * tariff).toFixed(2)}</span>`;
+  }
+  document.getElementById('trace-wrap').addEventListener('click', () => {
+    document.getElementById('history-overlay').classList.add('open');
+    renderHistoryBars();
+  });
+  function setStatus(state){
+    const dot = document.getElementById('status-dot');
+    const label = document.getElementById('status-label');
+    const offlineNote = document.getElementById('offline-note');
+    dot.classList.remove('live');
+    if (state === 'live') { dot.classList.add('live'); label.textContent = 'Live'; offlineNote.style.display = 'none'; }
+    else if (state === 'connecting') { label.textContent = 'Connecting…'; offlineNote.style.display = 'none'; }
+    else { label.textContent = 'Offline'; offlineNote.style.display = 'block'; }
+  }
+  setInterval(() => { if (lastSeen && Date.now() - lastSeen > 45000) setStatus('offline'); }, 5000);
+
+  // ---- Main power toggle ----
+  document.getElementById('power-toggle').addEventListener('click', () => {
+    if (!mqttClient || awaitingConfirm) return;
+    const next = !desiredOn;
+    awaitingConfirm = true;
+    const toggle = document.getElementById('power-toggle');
+    toggle.classList.add('disabled');
+    toggle.classList.toggle('on', next);
+    const ripple = document.getElementById('ripple');
+    ripple.classList.remove('active'); void ripple.offsetWidth; ripple.classList.add('active');
+    if (next) {
+      // clear any leftover one-time countdown so it can't unexpectedly cut this session short later
+      mqttClient.publish(`cmnd/${TOPIC}/Backlog`, `RuleTimer1 0;Power1 on`);
+    } else {
+      mqttClient.publish(`cmnd/${TOPIC}/POWER`, 'OFF');
+    }
+    setTimeout(() => { toggle.classList.remove('disabled'); awaitingConfirm = false; }, 6000);
+  });
+
+  // ---- Trace chart ----
+  const canvas = document.getElementById('trace');
+  const ctx = canvas.getContext('2d');
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawTrace();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  function drawTrace(){
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    ctx.clearRect(0,0,w,h);
+    if (history.length < 2) return;
+    const maxW = Math.max(10, ...history.map(p => p.w));
+    const t0 = history[0].t, t1 = history[history.length-1].t;
+    const span = Math.max(1000, t1 - t0);
+    ctx.beginPath();
+    history.forEach((p, i) => {
+      const x = ((p.t - t0) / span) * w;
+      const y = h - (p.w / maxW) * (h - 8) - 4;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#F0A83C'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(240,168,60,0.5)'; ctx.shadowBlur = 6;
+    ctx.stroke();
+    ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath(); ctx.shadowBlur = 0;
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, 'rgba(240,168,60,0.18)'); grad.addColorStop(1, 'rgba(240,168,60,0)');
+    ctx.fillStyle = grad; ctx.fill();
+  }
+
+  function updateCostDisplay(){
+    const tariff = parseFloat(localStorage.getItem('plug_tariff') || '8');
+    const todayKwh = parseFloat(document.getElementById('kwh-today').textContent) || 0;
+    const totalKwh = parseFloat(document.getElementById('kwh-total').textContent) || 0;
+    document.getElementById('cost-today').textContent = `≈ ₹${(todayKwh * tariff).toFixed(2)}`;
+    document.getElementById('cost-total').textContent = `≈ ₹${(totalKwh * tariff).toFixed(2)}`;
+  }
+
+  // ================= TIMERS SHEET =================
+  const timersOverlay = document.getElementById('timers-overlay');
+  document.getElementById('timers-btn').addEventListener('click', () => {
+    timersOverlay.classList.add('open');
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, '');
+      for (let i = 1; i <= NUM_SLOTS; i++) mqttClient.publish(`cmnd/${TOPIC}/Timer${i}`, '');
+    }
+  });
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---- Once tab ----
+  let selectedOnceMinutes = 1;
+  document.querySelectorAll('.dur-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.dur-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedOnceMinutes = parseInt(chip.dataset.min, 10);
+      document.getElementById('once-custom').value = '';
+    });
+  });
+  document.getElementById('once-custom').addEventListener('input', (e) => {
+    document.querySelectorAll('.dur-chip').forEach(c => c.classList.remove('active'));
+    selectedOnceMinutes = parseInt(e.target.value, 10) || 0;
+  });
+
+  function ensureOneTimeRule(){
+    // Idempotent: safe to send every time. Sets up relay1 to turn off when the rule timer fires.
+    mqttClient.publish(`cmnd/${TOPIC}/Rule1`, 'on Rules#Timer=1 do Power1 off endon');
+    mqttClient.publish(`cmnd/${TOPIC}/Rule1`, '1');
+  }
+
+  document.getElementById('once-start-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const minutes = selectedOnceMinutes || parseInt(document.getElementById('once-custom').value, 10);
+    if (!minutes || minutes <= 0) { alert('Pick or enter a duration first.'); return; }
+    ensureOneTimeRule();
+    const seconds = minutes * 60;
+    onceSuppressedPermanent = permanentEnabled;
+    // Everything in ONE Backlog command, sent to one topic, so Tasmota
+    // executes them in this exact order with no race against other messages:
+    // disable permanent -> turn on -> arm the one-time countdown.
+    mqttClient.publish(`cmnd/${TOPIC}/Backlog`, `PulseTime1 0;Power1 on;RuleTimer1 ${seconds}`);
+    onceActive = true;
+    onceEndsAt = Date.now() + seconds * 1000;
+    document.getElementById('once-countdown').style.display = 'block';
+    document.getElementById('once-cancel-btn').style.display = 'block';
+    document.getElementById('once-start-btn').textContent = 'Restart';
+    tickOnceCountdown();
+    if (onceCountdownInterval) clearInterval(onceCountdownInterval);
+    onceCountdownInterval = setInterval(tickOnceCountdown, 1000);
+    updateTimerStatusLine();
+  });
+  document.getElementById('once-cancel-btn').addEventListener('click', () => {
+    if (!mqttClient) return;
+    mqttClient.publish(`cmnd/${TOPIC}/RuleTimer1`, '0');
+    onceActive = false;
+    if (onceCountdownInterval) clearInterval(onceCountdownInterval);
+    document.getElementById('once-countdown').style.display = 'none';
+    document.getElementById('once-cancel-btn').style.display = 'none';
+    document.getElementById('once-start-btn').textContent = 'Start';
+    // restore permanent immediately since we're cancelling, not letting it finish naturally
+    if (onceSuppressedPermanent) {
+      onceSuppressedPermanent = false;
+      if (permanentEnabled && permanentMinutes > 0 && mqttClient.connected) {
+        mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, String(permanentMinutes * 60 + 100));
+      }
+    }
+    updateTimerStatusLine();
+  });
+  function tickOnceCountdown(){
+    const remaining = Math.max(0, Math.round((onceEndsAt - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60), s = remaining % 60;
+    document.getElementById('once-countdown').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (remaining <= 0) {
+      onceActive = false;
+      clearInterval(onceCountdownInterval);
+      document.getElementById('once-cancel-btn').style.display = 'none';
+      document.getElementById('once-start-btn').textContent = 'Start';
+      updateTimerStatusLine();
+    }
+  }
+
+  // ---- Permanent tab ----
+  document.getElementById('permanent-save-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const minutes = parseInt(document.getElementById('permanent-input').value || '0', 10);
+    const pulseValue = minutes > 0 ? (minutes * 60 + 100) : 0;
+    mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, String(pulseValue));
+    permanentMinutes = minutes;
+    permanentEnabled = minutes > 0;
+    renderPermanentStatusLine();
+    updateTimerStatusLine();
+    const statusEl = document.getElementById('permanent-save-status');
+    statusEl.textContent = `Saved. Sent: PulseTime1 ${pulseValue}`;
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  });
+
+  // ---- Schedule tab ----
+  const DAY_LABELS = ['S','M','T','W','T','F','S'];
+  const scheduleContainer = document.getElementById('schedule-slots');
+  const NUM_SLOTS = 4;
+  for (let i = 1; i <= NUM_SLOTS; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'alarm-row';
+    slot.dataset.slot = i;
+    slot.innerHTML = `
+      <div class="row">
+        <input type="time" class="sched-time" value="08:00" />
+        <label class="switch"><input type="checkbox" class="sched-enable" /><span class="slider"></span></label>
+      </div>
+      <select class="sched-action">
+        <option value="1">Turn on</option>
+        <option value="0">Turn off</option>
+      </select>
+      <div class="day-chips">
+        ${DAY_LABELS.map((d, idx) => `<div class="day-chip" data-day="${idx}">${d}</div>`).join('')}
+      </div>
+    `;
+    scheduleContainer.appendChild(slot);
+    slot.querySelectorAll('.day-chip').forEach(chip => chip.addEventListener('click', () => chip.classList.toggle('active')));
+  }
+  function getScheduleSlotEls(n){
+    const slot = scheduleContainer.querySelector(`[data-slot="${n}"]`);
+    return {
+      slot,
+      enable: slot.querySelector('.sched-enable'),
+      time: slot.querySelector('.sched-time'),
+      action: slot.querySelector('.sched-action'),
+      dayChips: slot.querySelectorAll('.day-chip'),
+    };
+  }
+  function applyTimerToUI(n, t){
+    const { enable, time, action, dayChips } = getScheduleSlotEls(n);
+    enable.checked = !!t.Enable;
+    if (t.Time) time.value = t.Time;
+    action.value = String(t.Action ?? 1);
+    const days = t.Days || '0000000';
+    dayChips.forEach((chip, idx) => chip.classList.toggle('active', days[idx] === '1'));
+  }
+  document.getElementById('schedule-save-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    let hasOn = false, hasOff = false;
+    for (let i = 1; i <= NUM_SLOTS; i++) {
+      const { enable, time, action, dayChips } = getScheduleSlotEls(i);
+      const days = Array.from(dayChips).map(c => c.classList.contains('active') ? '1' : '0').join('');
+      if (enable.checked) { if (action.value === '1') hasOn = true; if (action.value === '0') hasOff = true; }
+      const timerObj = { Enable: enable.checked ? 1 : 0, Mode: 0, Time: time.value || '08:00', Window: 0, Days: days, Repeat: 1, Output: 1, Action: parseInt(action.value, 10) };
+      scheduleTimers[i-1] = timerObj;
+      mqttClient.publish(`cmnd/${TOPIC}/Timer${i}`, JSON.stringify(timerObj));
+    }
+    mqttClient.publish(`cmnd/${TOPIC}/Timers`, '1');
+
+    // A schedule with both an "on" and an "off" entry already fully governs
+    // the duty cycle — the permanent auto-off would only cut it short, so
+    // switch it off automatically. A schedule with only "on" entries leaves
+    // permanent alone, so the plug doesn't stay on forever.
+    if (hasOn && hasOff) {
+      mqttClient.publish(`cmnd/${TOPIC}/PulseTime1`, '0');
+      permanentEnabled = false;
+      renderPermanentStatusLine();
+    }
+
+    updateTimerStatusLine();
+    const statusEl = document.getElementById('schedule-save-status');
+    statusEl.textContent = hasOn && hasOff ? 'Saved. (Permanent auto-off turned off since this schedule covers on & off.)' : 'Saved.';
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  });
+
+  // ---- Status line under the power button ----
+  function computeNextSchedule(){
+    const now = new Date();
+    let best = null;
+    scheduleTimers.forEach(t => {
+      if (!t || !t.Enable || !t.Time) return;
+      const [hh, mm] = t.Time.split(':').map(Number);
+      for (let addDays = 0; addDays < 8; addDays++) {
+        const candidate = new Date(now);
+        candidate.setDate(now.getDate() + addDays);
+        candidate.setHours(hh, mm, 0, 0);
+        if (candidate <= now) continue;
+        const dayIdx = candidate.getDay(); // 0=Sun..6=Sat, matches Days string order
+        if ((t.Days || '0000000')[dayIdx] !== '1') continue;
+        if (!best || candidate < best.when) best = { when: candidate, action: t.Action };
+        break;
+      }
+    });
+    return best;
+  }
+  function updateTimerStatusLine(){
+    const container = document.getElementById('timer-status');
+    container.innerHTML = '';
+    if (onceActive) {
+      const remaining = Math.max(0, Math.round((onceEndsAt - Date.now()) / 1000));
+      const m = Math.floor(remaining / 60), s = remaining % 60;
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.innerHTML = `Turns off in ${m}:${String(s).padStart(2,'0')} <button id="status-cancel-once">cancel</button>`;
+      container.appendChild(line);
+      line.querySelector('#status-cancel-once').addEventListener('click', () => document.getElementById('once-cancel-btn').click());
+    }
+    if (permanentMinutes > 0) {
+      const line = document.createElement('div');
+      if (permanentRunEndsAt > Date.now()) {
+        const remaining = Math.max(0, Math.round((permanentRunEndsAt - Date.now()) / 1000));
+        const m = Math.floor(remaining / 60), s = remaining % 60;
+        line.className = 'line';
+        line.textContent = `Auto-off in ${m}:${String(s).padStart(2,'0')}`;
+      } else {
+        line.className = 'line muted';
+        line.textContent = `Auto-off ${permanentMinutes} min after every power-on`;
+      }
+      container.appendChild(line);
+    }
+    const next = computeNextSchedule();
+    if (next) {
+      const line = document.createElement('div');
+      line.className = 'line muted';
+      const dayStr = next.when.toLocaleDateString(undefined, { weekday: 'short' });
+      const timeStr = next.when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+      line.textContent = `Next: ${next.action == 1 ? 'On' : 'Off'} ${dayStr} ${timeStr}`;
+      container.appendChild(line);
+    }
+  }
+  setInterval(updateTimerStatusLine, 1000);
+
+  // ================= SETTINGS SHEET =================
+  const settingsOverlay = document.getElementById('settings-overlay');
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    settingsOverlay.classList.add('open');
+    document.getElementById('tariff-input').value = localStorage.getItem('plug_tariff') || '8';
+    if (mqttClient && mqttClient.connected) {
+      mqttClient.publish(`cmnd/${TOPIC}/PowerOnState`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/MaxPower`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/SetOption73`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/Emulation`, '');
+      mqttClient.publish(`cmnd/${TOPIC}/Rule2`, '');
+    }
+  });
+  document.getElementById('settings-save').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    mqttClient.publish(`cmnd/${TOPIC}/PowerOnState`, document.getElementById('poweronstate-select').value);
+    mqttClient.publish(`cmnd/${TOPIC}/MaxPower`, document.getElementById('maxpower-input').value || '0');
+    mqttClient.publish(`cmnd/${TOPIC}/SetOption73`, document.getElementById('childlock-toggle').checked ? '1' : '0');
+    mqttClient.publish(`cmnd/${TOPIC}/Emulation`, document.getElementById('voice-toggle').checked ? '2' : '0');
+
+    if (document.getElementById('zeropower-toggle').checked) {
+      // Dedicated to this feature only — safe to (re)send every save.
+      mqttClient.publish(`cmnd/${TOPIC}/Rule2`, 'on ENERGY#Power<1 do RuleTimer2 30 endon on ENERGY#Power>1 do RuleTimer2 0 endon on Rules#Timer=2 do Power1 off endon');
+      mqttClient.publish(`cmnd/${TOPIC}/Rule2`, '1');
+    } else {
+      mqttClient.publish(`cmnd/${TOPIC}/Rule2`, '0');
+    }
+
+    const tariff = parseFloat(document.getElementById('tariff-input').value || '0');
+    localStorage.setItem('plug_tariff', String(tariff));
+    updateCostDisplay();
+    const statusEl = document.getElementById('settings-save-status');
+    statusEl.textContent = 'Saved.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  });
+
+  document.getElementById('calibrate-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const p = document.getElementById('cal-power-input').value;
+    const v = document.getElementById('cal-voltage-input').value;
+    const a = document.getElementById('cal-current-input').value;
+    if (!p && !v && !a) { alert('Enter at least one known value to calibrate against.'); return; }
+    const sent = [];
+    if (p) { mqttClient.publish(`cmnd/${TOPIC}/PowerSet`, p); sent.push(`Power=${p}W`); }
+    if (v) { mqttClient.publish(`cmnd/${TOPIC}/VoltageSet`, v); sent.push(`Voltage=${v}V`); }
+    if (a) { mqttClient.publish(`cmnd/${TOPIC}/CurrentSet`, a); sent.push(`Current=${a}A`); }
+    document.getElementById('cal-power-input').value = '';
+    document.getElementById('cal-voltage-input').value = '';
+    document.getElementById('cal-current-input').value = '';
+    const statusEl = document.getElementById('calibrate-status');
+    statusEl.textContent = `Calibrated: ${sent.join(', ')}`;
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  });
+  document.getElementById('reset-energy-btn').addEventListener('click', () => {
+    if (!mqttClient || !mqttClient.connected) return;
+    const sure = confirm('This clears the today/yesterday/total kWh counters on the plug and cannot be undone. Continue?');
+    if (!sure) return;
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyToday`, '0');
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyYesterday`, '0');
+    mqttClient.publish(`cmnd/${TOPIC}/EnergyTotal`, '0');
+    mqttClient.publish(`cmnd/${TOPIC}/Status`, '8');
+    const statusEl = document.getElementById('settings-save-status');
+    statusEl.textContent = 'Usage history cleared.';
+    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  }
+</script>
+</body>
+</html>
